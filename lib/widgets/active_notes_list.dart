@@ -50,7 +50,6 @@ class _ActiveNotesListState extends State<ActiveNotesList>
       return AnimatedBuilder(
         builder: (ctx, child) {
           final double deviceWidth = MediaQuery.of(ctx).size.width;
-
           return Transform.translate(
             offset: Offset(-_animation.value * deviceWidth, 0),
             child: child,

@@ -1,9 +1,6 @@
-import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum Urgency { Relaxed, GetDone, Urgent, TopPriority }
 
@@ -85,66 +82,44 @@ class _NewNoteState extends State<NewNote> {
     }
 
     Widget _buildDoneButton(String buttonText) {
-      return Platform.isIOS
-          ? CupertinoButton(
-              child: Text(buttonText),
-              onPressed: _navigateAndSendDataOnPop,
-            )
-          : RaisedButton(
-              color: Theme.of(context).primaryColor,
-              elevation: 5,
-              onPressed: _navigateAndSendDataOnPop,
-              child: Text(
-                buttonText,
-                style: Theme.of(context).textTheme.title,
-              ),
-            );
+      return RaisedButton(
+        color: Theme.of(context).primaryColor,
+        elevation: 5,
+        onPressed: _navigateAndSendDataOnPop,
+        child: Text(
+          buttonText,
+          style: Theme.of(context).textTheme.title,
+        ),
+      );
     }
 
     Widget _buildCancelButton(String buttonText) {
-      return Platform.isIOS
-          ? CupertinoButton(
-              child: Text(buttonText),
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                Navigator.of(context).pop();
-              },
-            )
-          : RaisedButton(
-              color: Theme.of(context).primaryColor,
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                buttonText,
-                style: Theme.of(context).textTheme.title,
-              ),
-            );
+      return RaisedButton(
+        color: Theme.of(context).primaryColor,
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          Navigator.of(context).pop();
+        },
+        child: Text(
+          buttonText,
+          style: Theme.of(context).textTheme.title,
+        ),
+      );
     }
 
     _buildDeleteButton(String buttonText) {
-      return Platform.isIOS
-          ? CupertinoButton(
-              child: Text(buttonText),
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                widget.currentNote.reference.delete();
-                Navigator.of(context).pop();
-              },
-            )
-          : RaisedButton(
-              color: Theme.of(context).errorColor,
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                widget.currentNote.reference.delete();
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                buttonText,
-                style: Theme.of(context).textTheme.title,
-              ),
-            );
+      return RaisedButton(
+        color: Theme.of(context).errorColor,
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          widget.currentNote.reference.delete();
+          Navigator.of(context).pop();
+        },
+        child: Text(
+          buttonText,
+          style: Theme.of(context).textTheme.title,
+        ),
+      );
     }
 
     Widget _buildDynamicTextField({
@@ -153,99 +128,11 @@ class _NewNoteState extends State<NewNote> {
       int maxLines,
       Function setNewValue,
     }) {
-      return Platform.isIOS
-          ? CupertinoTextField(
-              autocorrect: true,
-              placeholder: inputName,
-              maxLines: maxLines,
-              controller: originalText,
-              onChanged: setNewValue,
-            )
-          : TextField(
-              autocorrect: true,
-              decoration: InputDecoration(labelText: inputName),
-              controller: originalText,
-              onChanged: setNewValue,
-            );
-    }
-
-    Column _buildCupertinoSelector() {
-      return Column(
-        children: <Widget>[
-          _buildDynamicTextField(
-            inputName: 'Title',
-            originalText: startTitle,
-            maxLines: 1,
-            setNewValue: (newValue) {
-              setState(() {
-                newTitle = newValue;
-              });
-            },
-          ),
-          SizedBox(height: 20),
-          _buildDynamicTextField(
-            inputName: 'Description',
-            originalText: startDescription,
-            maxLines: 3,
-            setNewValue: (newValue) {
-              setState(() {
-                newDescription = newValue;
-              });
-            },
-          ),
-          CupertinoButton(
-            onPressed: () => showCupertinoModalPopup(
-                context: context,
-                builder: (ctx) {
-                  return Container(
-                    height: 200,
-                    child: CupertinoPicker(
-                      itemExtent: 35.0,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          urgency = Urgency.values[index].toString();
-                        });
-                      },
-                      children: <Widget>[
-                        Text('Relaxed'),
-                        Text('Get Done'),
-                        Text('Urgent'),
-                        Text('Top Priority'),
-                      ],
-                    ),
-                  );
-                }),
-            child: urgency == null ? Text('Choose Urgency Level') : Text(urgency.substring(8)),
-          ),
-        ],
-      );
-    }
-
-    Widget _buildCupertinoDialog() {
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 10,
-        ),
-        child: CupertinoAlertDialog(
-          actions: <Widget>[
-            if (widget.currentNote == null)
-              CupertinoDialogAction(
-                child: _buildCancelButton('Cancel'),
-              ),
-            if (widget.currentNote != null)
-              CupertinoDialogAction(
-                isDestructiveAction: true,
-                child: _buildDeleteButton('Delete'),
-              ),
-            CupertinoDialogAction(
-              child: _buildDoneButton('Done'),
-              isDefaultAction: true,
-            ),
-          ],
-          content: SingleChildScrollView(
-            child: _buildCupertinoSelector(),
-          ),
-        ),
+      return TextField(
+        autocorrect: true,
+        decoration: InputDecoration(labelText: inputName),
+        controller: originalText,
+        onChanged: setNewValue,
       );
     }
 
@@ -348,8 +235,6 @@ class _NewNoteState extends State<NewNote> {
       );
     }
 
-    return Platform.isIOS
-        ? _buildCupertinoDialog()
-        : _buildAndroidBottomSheet();
+    return _buildAndroidBottomSheet();
   }
 }
