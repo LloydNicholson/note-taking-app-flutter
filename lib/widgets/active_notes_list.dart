@@ -21,7 +21,7 @@ class ActiveNotesList extends StatefulWidget {
 
 class _ActiveNotesListState extends State<ActiveNotesList>
     with SingleTickerProviderStateMixin {
-  Animation<double> _animation;
+  Animation<Offset> _animation;
   AnimationController _controller;
 
   @override
@@ -30,33 +30,26 @@ class _ActiveNotesListState extends State<ActiveNotesList>
     // set up a controller for the animation
     _controller = AnimationController(
       duration: Duration(
-        milliseconds: 800,
+        milliseconds: 300,
       ),
       vsync: this,
     );
     // set up the animation with a curved animation
-    _animation = Tween(begin: -1.0, end: 0.0).animate(
+    _animation = Tween<Offset>(begin: Offset(1.0, 0), end: Offset(0.0, 0)).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Curves.easeInOut,
+        curve: Curves.linear,
       ),
     );
-    _controller.forward();
+    // _controller.forward();
   }
 
   @override
   Widget build(BuildContext context) {
     Widget _buildListCard(int index, DocumentSnapshot note) {
-      return AnimatedBuilder(
+      return AnimatedList(
         builder: (ctx, child) {
-          final double deviceWidth = MediaQuery.of(ctx).size.width;
-          return Transform.translate(
-            offset: Offset(-_animation.value * deviceWidth, 0),
-            child: child,
-          );
-        },
-        animation: _animation,
-        child: Card(
+          return Card(
           margin: EdgeInsets.symmetric(
             vertical: 10,
             horizontal: 5,
@@ -66,7 +59,10 @@ class _ActiveNotesListState extends State<ActiveNotesList>
             currentItemIndex: index,
             note: note,
             openNoteEditor: widget.openNoteEditor,
-          ),
+          );
+          
+        },
+        animation: _animation,
         ),
       );
     }
