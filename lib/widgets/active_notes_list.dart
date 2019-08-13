@@ -46,9 +46,8 @@ class _ActiveNotesListState extends State<ActiveNotesList>
   @override
   Widget build(BuildContext context) {
     Widget _buildListCard(int index, DocumentSnapshot note) {
-      return AnimatedList(
-        builder: (ctx, child) {
-          return Card(
+      return 
+           Card(
           margin: EdgeInsets.symmetric(
             vertical: 10,
             horizontal: 5,
@@ -60,10 +59,9 @@ class _ActiveNotesListState extends State<ActiveNotesList>
             openNoteEditor: widget.openNoteEditor,
           );
           
-        },
-        animation: _animation,
-        ),
-      );
+    
+       
+     
     }
 
     return Container(
@@ -79,15 +77,15 @@ class _ActiveNotesListState extends State<ActiveNotesList>
                     style: TextStyle(fontSize: 24),
                   ),
                 )
-              : ListView.builder(
+              : AnimatedList(
                   shrinkWrap: true,
-                  itemBuilder: (ctx, index) {
+                  itemBuilder: (ctx, index, animation) {
                     return _buildListCard(
                       index,
                       snapshot.data.documents[index],
                     );
                   },
-                  itemCount: snapshot.data.documents.length,
+                  initialItemCount: snapshot.data.documents.length,
                 );
         },
       ),
