@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 import './active_note_list_item.dart';
+import '../providers/notes.dart';
 
 class ActiveNotesList extends StatefulWidget {
-  final Function deleteNote;
   final Function openNoteEditor;
-  final bool showCompleted;
 
   ActiveNotesList(
-    this.deleteNote,
     this.openNoteEditor,
-    this.showCompleted,
   );
 
   @override
@@ -20,73 +18,39 @@ class ActiveNotesList extends StatefulWidget {
 
 class _ActiveNotesListState extends State<ActiveNotesList>
     with SingleTickerProviderStateMixin {
-  Animation<Offset> _animation;
-  AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    // set up a controller for the animation
-    _controller = AnimationController(
-      duration: Duration(
-        milliseconds: 300,
-      ),
-      vsync: this,
-    );
-    // set up the animation with a curved animation
-    _animation = Tween<Offset>(begin: Offset(1.0, 0), end: Offset(0.0, 0)).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.linear,
-      ),
-    );
-    // _controller.forward();
-  }
-
   @override
   Widget build(BuildContext context) {
-    Widget _buildListCard(int index, DocumentSnapshot note) {
-      return 
-           Card(
-          margin: EdgeInsets.symmetric(
-            vertical: 10,
-            horizontal: 5,
-          ),
-          elevation: 5,
-          child: ActiveNoteListItem(
-            currentItemIndex: index,
-            note: note,
-            openNoteEditor: widget.openNoteEditor,
-          );
-          
-    
-       
-     
-    }
-
     return Container(
       child: StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection('currentNotes').snapshots(),
         builder: (context, snapshot) {
           // var currentIndex = -1;
-          if (!snapshot.hasData) return CircularProgressIndicator();
-          return snapshot.data.documents.length <= 0
-              ? Center(
-                  child: Text(
-                    'No notes added',
-                    style: TextStyle(fontSize: 24),
-                  ),
-                )
-              : AnimatedList(
-                  shrinkWrap: true,
-                  itemBuilder: (ctx, index, animation) {
-                    return _buildListCard(
-                      index,
-                      snapshot.data.documents[index],
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return CircularProgressIndicator();
+          return Consumer<Notes>(
+            builder: (ctx, animationData, _) {
+              return snapshot.data.documents.length <= 0
+                  ? Center(
+                      child: Text(
+                        'No notes added',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    )
+                  : AnimatedList(
+                      key: animationData.listKey,
+                      initialItemCount: snapshot.data.documents.length,
+                      shrinkWrap: true,
+                      itemBuilder: (ctx, index, animation) {
+                        return ActiveNoteListItem(
+                          currentItemIndex: index,
+                          note: snapshot.data.documents[index],
+                          openNoteEditor: widget.openNoteEditor,
+                          animation: animation,
+                        );
+                      },
                     );
-                  },
-                  initialItemCount: snapshot.data.documents.length,
-                );
+            },
+          );
         },
       ),
     );

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "48333255256",
+    "firebase_url": "https://flutter-note-taking-app-9068b.firebaseio.com",
+    "project_id": "flutter-note-taking-app-9068b",
+    "storage_bucket": "flutter-note-taking-app-9068b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:48333255256:android:9588ba4ed8c94632",
+        "android_client_info": {
+          "package_name": "com.lloydnicholson.new_note_taking_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "48333255256-na4i8eqes6mjasg3uvd3ssv4h2mapmia.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsLGmisr1a8p93-qnAcwFqIXgG92kv7X4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "48333255256-na4i8eqes6mjasg3uvd3ssv4h2mapmia.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "48333255256-uqktt8hgvb7ssbse3fl346c9t576jbgq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lloydindevelopment.firestoreTest"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
