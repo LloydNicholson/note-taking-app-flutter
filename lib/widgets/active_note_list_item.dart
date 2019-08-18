@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:new_note_taking_app/providers/notes.dart';
 import 'package:provider/provider.dart';
 
@@ -111,7 +112,22 @@ class ActiveNoteListItem extends StatelessWidget {
               note['description'],
               style: TextStyle(fontSize: 16),
             ),
-//            Text(DateFormat.yMEd().format(notes[index].dueDate)
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  DateFormat.MMMd().format(
+                    DateTime.parse(note['date']),
+                  ),
+                ),
+                Text(
+                  TimeOfDay.fromDateTime(
+                    DateTime.parse(note['time']),
+                  ).format(context),
+                ),
+              ],
+            ),
             onTap: () => openNoteEditor(context, currentItemIndex, note),
           ),
         ),

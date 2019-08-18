@@ -50,17 +50,22 @@ class Notes extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addNote(
+  Future<void> addNote({
+    BuildContext ctx,
     String id,
     String title,
     String description,
     String urgency,
-  ) async {
+    DateTime date,
+    DateTime time,
+  }) async {
     await _currentNotes.add({
       'id': id,
       'title': title,
       'description': description,
       'urgency': urgency,
+      'date': date.toIso8601String(),
+      'time': time.toIso8601String(),
     });
     _listKey.currentState.insertItem(
       0,
@@ -69,22 +74,31 @@ class Notes extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateNote(
+  Future<void> updateNote({
+    BuildContext ctx,
     DocumentSnapshot currentNote,
     String id,
     String title,
     String description,
     String urgency,
-  ) async {
+    DateTime date,
+    DateTime time,
+  }) async {
     _isLoading = true;
     Firestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot freshSnap = await transaction.get(currentNote.reference);
-      await transaction.update(freshSnap.reference, {
-        'id': id,
-        'title': title,
-        'description': description,
-        'urgency': urgency,
-      });
+      try {
+        DocumentSnapshot freshSnap = await transaction.get(currentNote.reference);
+        await transaction.update(freshSnap.reference, {
+          'id': id,
+          'title': title,
+          'description': description,
+          'urgency': urgency,
+          'date': date.toIso8601String(),
+          'time': time.toIso8601String(),
+        });
+      } catch (error) {
+        print(error);
+      }
     }).then((_) {
       // updated our data and loading is now false
       _isLoading = false;

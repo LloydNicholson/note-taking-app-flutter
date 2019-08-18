@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../providers/notes.dart';
 
@@ -21,6 +22,8 @@ class NewNote extends StatefulWidget {
 }
 
 class _NewNoteState extends State<NewNote> {
+  final descriptionFocusNode = FocusNode();
+  final titleFocusNode = FocusNode();
   String receivedId;
   String newTitle;
   String newDescription;
@@ -30,9 +33,8 @@ class _NewNoteState extends State<NewNote> {
   TextEditingController startDescription;
   AnimationController controller;
   String urgency;
-  FocusNode descriptionFocusNode;
-  FocusNode titleFocusNode;
   DateTime pickedDate;
+  DateTime pickedTime;
 
   @override
   void initState() {
@@ -45,6 +47,10 @@ class _NewNoteState extends State<NewNote> {
           TextEditingController(text: widget.currentNote['description']);
       newDescription = startDescription.text;
       urgency = widget.currentNote['urgency'].toString();
+
+      // set date and time from a string received from firebase
+      pickedDate = DateTime.parse(widget.currentNote['date']);
+      pickedTime = DateTime.parse(widget.currentNote['time']);
     } else {
       receivedId = UniqueKey().toString();
       startTitle = TextEditingController(text: '');
@@ -52,9 +58,9 @@ class _NewNoteState extends State<NewNote> {
       startDescription = TextEditingController(text: '');
       newDescription = startDescription.text;
       urgency = null;
+      pickedDate = DateTime.now();
+      pickedTime = DateTime.now();
     }
-    descriptionFocusNode = FocusNode();
-    titleFocusNode = FocusNode();
   }
 
   @override
@@ -65,26 +71,35 @@ class _NewNoteState extends State<NewNote> {
   }
 
   void _navigateAndSendDataOnPop() {
-    if (newTitle.isEmpty || newDescription.isEmpty) {
+    if (newTitle.isEmpty ||
+        newDescription.isEmpty ||
+        pickedDate == null ||
+        pickedTime == null) {
       return;
     }
 
     if (widget.currentNote != null) {
       // edit the live data from server
       Provider.of<Notes>(context).updateNote(
-        widget.currentNote,
-        receivedId,
-        newTitle,
-        newDescription,
-        urgency,
+        ctx: context,
+        currentNote: widget.currentNote,
+        id: receivedId,
+        title: newTitle,
+        description: newDescription,
+        urgency: urgency,
+        date: pickedDate,
+        time: pickedTime,
       );
     } else {
       // Add to the current collection
       Provider.of<Notes>(context).addNote(
-        receivedId,
-        newTitle,
-        newDescription,
-        urgency,
+        ctx: context,
+        id: receivedId,
+        title: newTitle,
+        description: newDescription,
+        urgency: urgency,
+        date: pickedDate,
+        time: pickedTime,
       );
     }
 
@@ -173,21 +188,41 @@ class _NewNoteState extends State<NewNote> {
   }
 
   Future<void> _chooseDate(BuildContext ctx) async {
-    final datePicker = await showDatePicker(
+    final date = await showDatePicker(
       context: ctx,
       firstDate: DateTime.now(),
-      initialDate: DateTime.now(),
+      initialDate: pickedDate != null ? pickedDate : DateTime.now(),
       lastDate: DateTime.now().add(Duration(days: 365)),
     );
-    if (datePicker == null) {
+    // print(TimeOfDay.fromDateTime(DateTime.now()));
+    final time = await showTimePicker(
+      context: ctx,
+      initialTime: TimeOfDay.fromDateTime(
+        pickedTime != null ? pickedTime : DateTime.now(),
+      ),
+    );
+    if (date == null || time == null) {
       return;
     }
+    final formattedTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).add(
+      Duration(
+        hours: time.hour,
+        minutes: time.minute,
+      ),
+    );
     setState(() {
-      pickedDate = datePicker;
+      pickedDate = date;
+      pickedTime = formattedTime;
     });
+    print(DateTime.parse(formattedTime.toIso8601String()));
+    _navigateAndSendDataOnPop();
   }
 
-  Widget _buildAndroidBottomSheet() {
+  Widget _buildBottomSheet() {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       child: SingleChildScrollView(
@@ -255,7 +290,16 @@ class _NewNoteState extends State<NewNote> {
               ),
               SizedBox(height: 10),
               FlatButton.icon(
-                label: Text('Choose date'),
+                label: Column(
+                  children: <Widget>[
+                    Text(pickedDate != null
+                        ? '${DateFormat.yMMMd().format(pickedDate)}'
+                        : 'Choose date'),
+                    Text(pickedDate != null
+                        ? '${TimeOfDay.fromDateTime(pickedTime).format(context)}'
+                        : 'Choose date'),
+                  ],
+                ),
                 icon: Icon(Icons.date_range),
                 onPressed: () => _chooseDate(context),
               ),
@@ -286,6 +330,6 @@ class _NewNoteState extends State<NewNote> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildAndroidBottomSheet();
+    return _buildBottomSheet();
   }
 }
