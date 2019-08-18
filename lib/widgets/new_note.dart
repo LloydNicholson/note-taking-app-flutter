@@ -10,12 +10,10 @@ enum Urgency { Relaxed, GetDone, Urgent, TopPriority }
 class NewNote extends StatefulWidget {
   final DocumentSnapshot currentNote;
   final int currentIndex;
-  final GlobalKey<AnimatedListState> listKey;
 
   NewNote({
     this.currentNote,
     this.currentIndex,
-    this.listKey,
   });
 
   @override
@@ -32,6 +30,9 @@ class _NewNoteState extends State<NewNote> {
   TextEditingController startDescription;
   AnimationController controller;
   String urgency;
+  FocusNode descriptionFocusNode;
+  FocusNode titleFocusNode;
+  DateTime pickedDate;
 
   @override
   void initState() {
@@ -52,6 +53,15 @@ class _NewNoteState extends State<NewNote> {
       newDescription = startDescription.text;
       urgency = null;
     }
+    descriptionFocusNode = FocusNode();
+    titleFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    titleFocusNode.dispose();
+    descriptionFocusNode.dispose();
+    super.dispose();
   }
 
   void _navigateAndSendDataOnPop() {
@@ -70,14 +80,12 @@ class _NewNoteState extends State<NewNote> {
       );
     } else {
       // Add to the current collection
-      if (widget.currentIndex >= 0) {
-        Provider.of<Notes>(context).addNote(
-          receivedId,
-          newTitle,
-          newDescription,
-          urgency,
-        );
-      }
+      Provider.of<Notes>(context).addNote(
+        receivedId,
+        newTitle,
+        newDescription,
+        urgency,
+      );
     }
 
     // Vibrate on tap
@@ -118,7 +126,6 @@ class _NewNoteState extends State<NewNote> {
         Provider.of<Notes>(context)
             .removeNote(context, widget.currentIndex, widget.currentNote);
         Navigator.pop(context);
-        print(widget.currentIndex);
       },
       child: Text(
         buttonText,
@@ -132,12 +139,21 @@ class _NewNoteState extends State<NewNote> {
     TextEditingController originalText,
     int maxLines,
     Function setNewValue,
+    FocusNode focusNode,
+    TextInputAction textInputAction,
+    Function onSubmit,
   }) {
     return TextField(
       autocorrect: true,
-      decoration: InputDecoration(labelText: inputName),
+      textInputAction: textInputAction,
+      focusNode: focusNode,
+      decoration: InputDecoration(
+        labelText: inputName,
+        hintText: 'Add a ${inputName.toLowerCase()}',
+      ),
       controller: originalText,
       onChanged: setNewValue,
+      onSubmitted: onSubmit,
     );
   }
 
@@ -150,90 +166,119 @@ class _NewNoteState extends State<NewNote> {
           value: urgencyLevel.toString(),
           groupValue: urgency,
           onChanged: setUrgency,
+          activeColor: Theme.of(context).primaryColor,
         ),
       ],
     );
   }
 
+  Future<void> _chooseDate(BuildContext ctx) async {
+    final datePicker = await showDatePicker(
+      context: ctx,
+      firstDate: DateTime.now(),
+      initialDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+    );
+    if (datePicker == null) {
+      return;
+    }
+    setState(() {
+      pickedDate = datePicker;
+    });
+  }
+
   Widget _buildAndroidBottomSheet() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 10),
-      child: Container(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildDynamicTextField(
-              inputName: 'Title',
-              originalText: startTitle,
-              maxLines: 1,
-              setNewValue: (newValue) {
-                setState(() {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _buildDynamicTextField(
+                inputName: 'Title',
+                originalText: startTitle,
+                textInputAction: TextInputAction.next,
+                maxLines: 1,
+                onSubmit: (val) {
+                  FocusScope.of(context).requestFocus(descriptionFocusNode);
+                },
+                setNewValue: (newValue) => setState(() {
                   newTitle = newValue;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            _buildDynamicTextField(
-              inputName: 'Description',
-              originalText: startDescription,
-              maxLines: 1,
-              setNewValue: (newValue) {
-                setState(() {
-                  newDescription = newValue;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Priority',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                _buildRadioCard('Relaxed', Urgency.Relaxed, (val) {
-                  setState(() {
-                    urgency = val;
-                  });
                 }),
-                _buildRadioCard('Get Done', Urgency.GetDone, (val) {
+              ),
+              SizedBox(height: 10),
+              _buildDynamicTextField(
+                inputName: 'Description',
+                focusNode: descriptionFocusNode,
+                originalText: startDescription,
+                maxLines: 1,
+                textInputAction: TextInputAction.done,
+                setNewValue: (newValue) {
                   setState(() {
-                    urgency = val;
+                    newDescription = newValue;
                   });
-                }),
-                _buildRadioCard('Urgent', Urgency.Urgent, (val) {
-                  setState(() {
-                    urgency = val;
-                  });
-                }),
-                _buildRadioCard('Top Priority', Urgency.TopPriority, (val) {
-                  setState(() {
-                    urgency = val;
-                  });
-                }),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5.0),
-              child: Row(
-                mainAxisAlignment: widget.currentNote != null
-                    ? MainAxisAlignment.spaceBetween
-                    : MainAxisAlignment.end,
+                },
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Priority',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  if (widget.currentNote != null) _buildDeleteButton('Delete'),
-                  ButtonBar(
-                    children: <Widget>[
-                      _buildCancelButton('Cancel'),
-                      _buildDoneButton('Done'),
-                    ],
-                  ),
+                  _buildRadioCard('Relaxed', Urgency.Relaxed, (val) {
+                    setState(() {
+                      urgency = val;
+                    });
+                  }),
+                  _buildRadioCard('Get Done', Urgency.GetDone, (val) {
+                    setState(() {
+                      urgency = val;
+                    });
+                  }),
+                  _buildRadioCard('Urgent', Urgency.Urgent, (val) {
+                    setState(() {
+                      urgency = val;
+                    });
+                  }),
+                  _buildRadioCard('Top Priority', Urgency.TopPriority, (val) {
+                    setState(() {
+                      urgency = val;
+                    });
+                  }),
                 ],
               ),
-            ),
-          ],
+              SizedBox(height: 10),
+              FlatButton.icon(
+                label: Text('Choose date'),
+                icon: Icon(Icons.date_range),
+                onPressed: () => _chooseDate(context),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: Row(
+                  mainAxisAlignment: widget.currentNote != null
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.end,
+                  children: <Widget>[
+                    if (widget.currentNote != null)
+                      _buildDeleteButton('Delete'),
+                    ButtonBar(
+                      children: <Widget>[
+                        _buildCancelButton('Cancel'),
+                        _buildDoneButton('Done'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

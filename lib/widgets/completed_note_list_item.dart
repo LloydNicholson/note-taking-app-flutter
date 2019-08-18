@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CompletedNoteListItem extends StatelessWidget {
@@ -19,9 +16,7 @@ class CompletedNoteListItem extends StatelessWidget {
         right: 5,
       ),
       leading: CircleAvatar(
-        backgroundColor: Platform.isIOS
-            ? CupertinoTheme.of(context).primaryColor
-            : Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).primaryColor,
         radius: 40,
         child: Icon(
           Icons.check,
@@ -36,8 +31,16 @@ class CompletedNoteListItem extends StatelessWidget {
         ),
       ),
       subtitle: Text(completedNote['description']),
+      trailing: IconButton(
+        icon: Icon(
+          Icons.delete,
+          color: Colors.red,
+        ),
+        onPressed: () async {
+          await completedNote.reference.delete();
+        },
+      ),
 //            Text(DateFormat.yMEd().format(notes[index].dueDate)
-      onTap: null,
     );
   }
 }

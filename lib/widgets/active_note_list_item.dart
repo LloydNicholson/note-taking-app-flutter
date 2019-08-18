@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:new_note_taking_app/providers/notes.dart';
+import 'package:provider/provider.dart';
 
 enum Urgency { Relaxed, GetDone, Urgent, TopPriority }
 
@@ -8,17 +10,20 @@ class ActiveNoteListItem extends StatelessWidget {
   final int currentItemIndex;
   final Function openNoteEditor;
   final Animation<double> animation;
+  final Key key;
 
   ActiveNoteListItem({
+    this.key,
     this.note,
     this.currentItemIndex,
     this.openNoteEditor,
     this.animation,
-  });
+  }) : super(key: key);
 
-  void _addNoteToCompleted(DocumentSnapshot note) {
-    note.reference.delete();
-    Firestore.instance.collection('completedNotes').add(note.data);
+  void _addNoteToCompleted(BuildContext ctx) {
+    final notesData = Provider.of<Notes>(ctx);
+    notesData.removeNote(ctx, currentItemIndex, note);
+    notesData.completedNotes.add(note.data);
   }
 
   @override
@@ -39,7 +44,7 @@ class ActiveNoteListItem extends StatelessWidget {
         child: Dismissible(
           key: ValueKey(note['id']),
           direction: DismissDirection.startToEnd,
-          onDismissed: (dir) => _addNoteToCompleted(note),
+          onDismissed: (dir) => _addNoteToCompleted(context),
           background: Container(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(
@@ -59,34 +64,41 @@ class ActiveNoteListItem extends StatelessWidget {
               bottom: 10,
               right: 10,
             ),
-            leading: CircleAvatar(
-              backgroundColor: Colors.white,
-              radius: 40,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  if (note['urgency'] == Urgency.TopPriority.toString())
-                    Icon(
-                      Icons.error,
-                      color: Colors.red,
-                    ),
-                  if (note['urgency'] == Urgency.Urgent.toString())
-                    Icon(
-                      Icons.watch_later,
-                      color: Colors.redAccent,
-                    ),
-                  if (note['urgency'] == Urgency.GetDone.toString())
-                    Icon(
-                      Icons.trending_up,
-                      color: Colors.greenAccent,
-                    ),
-                  if (note['urgency'] == Urgency.Relaxed.toString())
-                    Icon(
-                      Icons.filter_hdr,
-                      color: Colors.green,
-                    ),
-                ],
-              ),
+            leading: Consumer<Notes>(
+              builder: (ctx, notesData, _) {
+                return CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 40,
+                  child: notesData.isLoading
+                      ? CircularProgressIndicator()
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            if (note['urgency'] ==
+                                Urgency.TopPriority.toString())
+                              Icon(
+                                Icons.error,
+                                color: Colors.red,
+                              ),
+                            if (note['urgency'] == Urgency.Urgent.toString())
+                              Icon(
+                                Icons.watch_later,
+                                color: Colors.redAccent,
+                              ),
+                            if (note['urgency'] == Urgency.GetDone.toString())
+                              Icon(
+                                Icons.trending_up,
+                                color: Colors.greenAccent,
+                              ),
+                            if (note['urgency'] == Urgency.Relaxed.toString())
+                              Icon(
+                                Icons.filter_hdr,
+                                color: Colors.green,
+                              ),
+                          ],
+                        ),
+                );
+              },
             ),
             title: Text(
               note['title'],
