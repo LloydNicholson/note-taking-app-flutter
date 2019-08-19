@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 import '../widgets/active_note_list_item.dart';
 
@@ -32,7 +34,8 @@ class Notes extends ChangeNotifier {
     int index,
     DocumentSnapshot currentNote,
   ) async {
-    if (_listKey.currentState != null) {
+    FirebaseUser userData = Provider.of<FirebaseUser>(ctx, listen: false);
+    if (_listKey.currentState != null && userData != null) {
       _listKey.currentState.removeItem(
         index,
         (ctx, animation) {
@@ -59,19 +62,22 @@ class Notes extends ChangeNotifier {
     DateTime date,
     DateTime time,
   }) async {
-    await _currentNotes.add({
-      'id': id,
-      'title': title,
-      'description': description,
-      'urgency': urgency,
-      'date': date.toIso8601String(),
-      'time': time.toIso8601String(),
-    });
-    _listKey.currentState.insertItem(
-      0,
-      duration: Duration(milliseconds: 400),
-    );
-    notifyListeners();
+    FirebaseUser userData = Provider.of<FirebaseUser>(ctx, listen: false);
+    if (userData != null) {
+      await _currentNotes.add({
+        'userId': userData.uid,
+        'title': title,
+        'description': description,
+        'urgency': urgency,
+        'date': date.toIso8601String(),
+        'time': time.toIso8601String(),
+      });
+      _listKey.currentState.insertItem(
+        0,
+        duration: Duration(milliseconds: 400),
+      );
+      notifyListeners();
+    }
   }
 
   Future<void> updateNote({
@@ -84,25 +90,33 @@ class Notes extends ChangeNotifier {
     DateTime date,
     DateTime time,
   }) async {
+    FirebaseUser userData = Provider.of<FirebaseUser>(ctx, listen: false);
     _isLoading = true;
-    Firestore.instance.runTransaction((transaction) async {
-      try {
-        DocumentSnapshot freshSnap = await transaction.get(currentNote.reference);
+    notifyListeners();
+    if (userData != null) {
+      Firestore.instance.runTransaction((transaction) async {
+        DocumentSnapshot freshSnap =
+            await transaction.get(currentNote.reference);
         await transaction.update(freshSnap.reference, {
-          'id': id,
+          'userId': userData.uid,
           'title': title,
           'description': description,
           'urgency': urgency,
           'date': date.toIso8601String(),
           'time': time.toIso8601String(),
+        }).then((_) {
+          _isLoading = false;
+          notifyListeners();
         });
-      } catch (error) {
-        print(error);
-      }
-    }).then((_) {
-      // updated our data and loading is now false
-      _isLoading = false;
-    });
-    notifyListeners();
+      });
+    }
   }
+
+  // Future<List<QuerySnapshot>> fetchCurrentNotes() async {
+  //   return _currentNotes.snapshots().toList();
+  // }
+
+  // Future<List<QuerySnapshot>> fetchCompletedNotes() async {
+  //   return _completedNotes.snapshots().toList();
+  // }
 }

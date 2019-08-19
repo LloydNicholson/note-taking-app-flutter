@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:new_note_taking_app/providers/auth.dart';
+import 'package:new_note_taking_app/screens/auth_screen.dart';
 import 'package:provider/provider.dart';
 
 import './screens/active_notes_screen.dart';
@@ -20,22 +23,34 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(
           value: Notes(),
         ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'My Note Taking App',
-        theme: ThemeData(
-          primaryColor: Colors.purple,
-          textTheme: TextTheme(
-            title: TextStyle(
-              fontSize: 22,
-              color: Colors.white,
-            ),
-          ),
+        ChangeNotifierProvider.value(
+          value: Auth(),
         ),
-        routes: {
-          '/': (ctx) => ActiveNotesScreen(),
-          CompletedNotesScreen.routeName: (ctx) => CompletedNotesScreen(),
+        StreamProvider<FirebaseUser>.value(
+          value: FirebaseAuth.instance.onAuthStateChanged,
+        ),
+      ],
+      child: Consumer<FirebaseUser>(
+        builder: (ctx, firebaseUserData, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'My Note Taking App',
+            theme: ThemeData(
+              primaryColor: Colors.purple,
+              textTheme: TextTheme(
+                title: TextStyle(
+                  fontSize: 22,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            home: AuthScreen(),
+            routes: {
+              ActiveNotesScreen.routeName: (ctx) => ActiveNotesScreen(),
+              AuthScreen.routeName: (ctx) => AuthScreen(),
+              CompletedNotesScreen.routeName: (ctx) => CompletedNotesScreen(),
+            },
+          );
         },
       ),
     );

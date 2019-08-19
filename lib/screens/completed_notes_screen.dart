@@ -1,17 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/completed_notes_list.dart';
-import '../providers/notes.dart';
 
 class CompletedNotesScreen extends StatelessWidget {
   static const routeName = '/completed-notes';
 
   @override
   Widget build(BuildContext context) {
-    List<DocumentSnapshot> completedNotes = [];
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Completed Notes'),

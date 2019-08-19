@@ -16,11 +16,11 @@ class CompletedNoteListItem extends StatelessWidget {
         right: 5,
       ),
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).primaryColor,
-        radius: 40,
+        backgroundColor: Colors.transparent,
+        radius: 30,
         child: Icon(
           Icons.check,
-          color: Colors.white,
+          color: Theme.of(context).primaryColor,
         ),
       ),
       title: Text(

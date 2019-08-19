@@ -27,14 +27,14 @@ class _NewNoteState extends State<NewNote> {
   String receivedId;
   String newTitle;
   String newDescription;
-  DateTime newDueDate;
-  DateTime newReminderDate;
   TextEditingController startTitle;
   TextEditingController startDescription;
   AnimationController controller;
   String urgency;
   DateTime pickedDate;
   DateTime pickedTime;
+//  DateTime newDueDate;
+//  DateTime newReminderDate;
 
   @override
   void initState() {
@@ -71,7 +71,10 @@ class _NewNoteState extends State<NewNote> {
   }
 
   void _navigateAndSendDataOnPop() {
-    if (newTitle.isEmpty || newDescription.isEmpty) {
+    if (newTitle.isEmpty ||
+        newDescription.isEmpty ||
+        pickedDate == null ||
+        pickedTime == null) {
       return;
     }
 
@@ -102,14 +105,19 @@ class _NewNoteState extends State<NewNote> {
 
     // Vibrate on tap
     HapticFeedback.lightImpact();
-    Navigator.of(context).pop();
+    Navigator.pop(context);
   }
 
   Widget _buildDoneButton(String buttonText) {
     return RaisedButton(
       color: Theme.of(context).primaryColor,
       elevation: 5,
-      onPressed: _navigateAndSendDataOnPop,
+      onPressed: (newTitle.isEmpty ||
+              newDescription.isEmpty ||
+              pickedDate == null ||
+              pickedTime == null)
+          ? null
+          : _navigateAndSendDataOnPop,
       child: Text(
         buttonText,
         style: Theme.of(context).textTheme.title,
@@ -122,7 +130,7 @@ class _NewNoteState extends State<NewNote> {
       color: Theme.of(context).primaryColor,
       onPressed: () {
         HapticFeedback.selectionClick();
-        Navigator.of(context).pop();
+        Navigator.pop(context);
       },
       child: Text(
         buttonText,
@@ -253,11 +261,11 @@ class _NewNoteState extends State<NewNote> {
                   });
                 },
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 15),
               Text(
                 'Priority',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 18),
               ),
               SizedBox(height: 10),
               Row(
@@ -286,37 +294,44 @@ class _NewNoteState extends State<NewNote> {
                 ],
               ),
               SizedBox(height: 10),
-              FlatButton.icon(
-                label: (pickedDate != null || pickedTime != null)
-                    ? Column(
-                        children: <Widget>[
-                          Text('${DateFormat.yMMMd().format(pickedDate)}'),
-                          Text(
-                            '${TimeOfDay.fromDateTime(pickedTime).format(context)}',
-                          ),
-                        ],
-                      )
-                    : Text('Choose date and time'),
-                icon: Icon(Icons.date_range),
-                onPressed: () => _chooseDate(context),
+              Container(
+                width: double.infinity,
+                child: FlatButton.icon(
+                  label: (pickedDate != null || pickedTime != null)
+                      ? Column(
+                          children: <Widget>[
+                            Text('${DateFormat.yMMMd().format(pickedDate)}'),
+                            Text(
+                              '${TimeOfDay.fromDateTime(pickedTime).format(context)}',
+                            ),
+                          ],
+                        )
+                      : Text('Choose date and time'),
+                  icon: Icon(Icons.date_range),
+                  onPressed: () => _chooseDate(context),
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                child: Row(
-                  mainAxisAlignment: widget.currentNote != null
-                      ? MainAxisAlignment.spaceBetween
-                      : MainAxisAlignment.end,
-                  children: <Widget>[
-                    if (widget.currentNote != null)
-                      _buildDeleteButton('Delete'),
-                    ButtonBar(
+              Row(
+                mainAxisAlignment: widget.currentNote != null
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.end,
+                children: <Widget>[
+                  if (widget.currentNote != null) _buildDeleteButton('Delete'),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: widget.currentNote != null
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.center,
                       children: <Widget>[
                         _buildCancelButton('Cancel'),
+                        SizedBox(
+                          width: widget.currentNote != null ? 10 : 50,
+                        ),
                         _buildDoneButton('Done'),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -327,6 +342,11 @@ class _NewNoteState extends State<NewNote> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildBottomSheet();
+    return Container(
+      child: _buildBottomSheet(),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+      ),
+    );
   }
 }

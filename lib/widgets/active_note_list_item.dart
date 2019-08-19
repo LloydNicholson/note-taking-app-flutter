@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:new_note_taking_app/providers/notes.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/notes.dart';
 
 enum Urgency { Relaxed, GetDone, Urgent, TopPriority }
 
@@ -22,7 +23,7 @@ class ActiveNoteListItem extends StatelessWidget {
   }) : super(key: key);
 
   void _addNoteToCompleted(BuildContext ctx) {
-    final notesData = Provider.of<Notes>(ctx);
+    final notesData = Provider.of<Notes>(ctx, listen: false);
     notesData.removeNote(ctx, currentItemIndex, note);
     notesData.completedNotes.add(note.data);
   }
@@ -63,14 +64,14 @@ class ActiveNoteListItem extends StatelessWidget {
               left: 5,
               top: 10,
               bottom: 10,
-              right: 10,
+              right: 15,
             ),
             leading: Consumer<Notes>(
               builder: (ctx, notesData, _) {
                 return CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 40,
-                  child: notesData.isLoading
+                  backgroundColor: Colors.transparent,
+                  radius: 30,
+                  child: note != null && notesData.isLoading
                       ? CircularProgressIndicator()
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -84,17 +85,17 @@ class ActiveNoteListItem extends StatelessWidget {
                             if (note['urgency'] == Urgency.Urgent.toString())
                               Icon(
                                 Icons.watch_later,
-                                color: Colors.redAccent,
+                                color: Colors.orangeAccent,
                               ),
                             if (note['urgency'] == Urgency.GetDone.toString())
                               Icon(
                                 Icons.trending_up,
-                                color: Colors.greenAccent,
+                                color: Colors.green,
                               ),
                             if (note['urgency'] == Urgency.Relaxed.toString())
                               Icon(
                                 Icons.filter_hdr,
-                                color: Colors.green,
+                                color: Colors.greenAccent,
                               ),
                           ],
                         ),
@@ -104,13 +105,15 @@ class ActiveNoteListItem extends StatelessWidget {
             title: Text(
               note['title'],
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
               note['description'],
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 14),
             ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
