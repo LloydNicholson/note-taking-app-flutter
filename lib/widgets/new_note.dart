@@ -58,8 +58,8 @@ class _NewNoteState extends State<NewNote> {
       startDescription = TextEditingController(text: '');
       newDescription = startDescription.text;
       urgency = null;
-      pickedDate = DateTime.now();
-      pickedTime = DateTime.now();
+      pickedDate = null;
+      pickedTime = null;
     }
   }
 
@@ -71,10 +71,7 @@ class _NewNoteState extends State<NewNote> {
   }
 
   void _navigateAndSendDataOnPop() {
-    if (newTitle.isEmpty ||
-        newDescription.isEmpty ||
-        pickedDate == null ||
-        pickedTime == null) {
+    if (newTitle.isEmpty || newDescription.isEmpty) {
       return;
     }
 
@@ -290,16 +287,16 @@ class _NewNoteState extends State<NewNote> {
               ),
               SizedBox(height: 10),
               FlatButton.icon(
-                label: Column(
-                  children: <Widget>[
-                    Text(pickedDate != null
-                        ? '${DateFormat.yMMMd().format(pickedDate)}'
-                        : 'Choose date'),
-                    Text(pickedDate != null
-                        ? '${TimeOfDay.fromDateTime(pickedTime).format(context)}'
-                        : 'Choose date'),
-                  ],
-                ),
+                label: (pickedDate != null || pickedTime != null)
+                    ? Column(
+                        children: <Widget>[
+                          Text('${DateFormat.yMMMd().format(pickedDate)}'),
+                          Text(
+                            '${TimeOfDay.fromDateTime(pickedTime).format(context)}',
+                          ),
+                        ],
+                      )
+                    : Text('Choose date and time'),
                 icon: Icon(Icons.date_range),
                 onPressed: () => _chooseDate(context),
               ),

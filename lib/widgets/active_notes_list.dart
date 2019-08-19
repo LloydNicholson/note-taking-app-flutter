@@ -24,13 +24,11 @@ class _ActiveNotesListState extends State<ActiveNotesList>
       builder: (ctx, notesData, _) {
         return Container(
           child: StreamBuilder<QuerySnapshot>(
-            stream: notesData.currentNotes.snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) notesData.currentNotes.orderBy('title');
-              if (snapshot.connectionState == ConnectionState.waiting)
-                return Center(child: CircularProgressIndicator());
-              return Expanded(
-                child: snapshot.data.documents.length <= 0
+              stream: notesData.currentNotes.snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return Center(child: CircularProgressIndicator());
+                return snapshot.data.documents.length <= 0
                     ? Center(
                         child: Text(
                           'No notes added',
@@ -49,10 +47,9 @@ class _ActiveNotesListState extends State<ActiveNotesList>
                             animation: animation,
                           );
                         },
-                      ),
-              );
-            },
-          ),
+                      );
+              },
+            ),
         );
       },
     );
